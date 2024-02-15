@@ -1,16 +1,22 @@
-import { Body, Controller, Headers, Post } from '@nestjs/common';
+import { Body, Controller, Headers, Post, UseGuards } from '@nestjs/common';
 import { GithubService } from './github.service';
+import { GitHubEvent, GitHubPayload } from 'src/interface/github.interface';
+import { GithubGuard } from 'src/guards/github.guards';
 
 @Controller('github')
 export class GithubController {
   constructor(private readonly githubService: GithubService) {}
 
   @Post()
-  webhookHqadnler(
-    @Headers('x-github-event') githubEvent: string,
-    @Body() body: any,
+  @UseGuards(GithubGuard)
+  webhookHandler(
+    @Headers('x-github-event') githubEvent: GitHubEvent,
+    @Headers('X-Hub-Signature-256') signature: string,
+    @Body()
+    body: GitHubPayload,
   ) {
-    console.log({ githubEvent });
+    console.log({ signature });
+    this.githubService.handlePayload(githubEvent, body);
     return { githubEvent };
   }
 }
